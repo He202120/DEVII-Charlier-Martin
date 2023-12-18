@@ -1,8 +1,22 @@
 import os
 import shutil
+import click
 
 
-def trier_fichiers(source, destination, afficher_contenu, tri_regroupement):
+@click.command()
+@click.argument('source', type=click.Path(), metavar='<dossier_source>')
+@click.argument('destination', type=click.Path(), metavar='<dossier_destination>')
+@click.option('--afficher-contenu', is_flag=True, help='Afficher le contenu du dossier source avant le tri.')
+@click.option('--tri-regroupement', is_flag=True, help='Regroupe les fichiers en fonction de leurs extension')
+def trier_fichiers(source, destination, afficher_contenu,tri_regroupement):
+    """
+    Script pour trier les fichiers d'un dossier source vers un dossier destination.
+
+    PRE : - \n
+    POST : Va transporter les fichiers d'une source à une destination en fonction des autres paramètres renseignés\n
+    RAISES : FileNotFoundError si le fichier source n'existe pas
+    """
+
     if not os.path.exists(source):
         raise click.ClickException("Le fichier1 source n'existe pas")
 
@@ -50,4 +64,3 @@ def trier_regroupement(source,destination):
 
 if __name__ == '__main__':
     trier_fichiers()
-

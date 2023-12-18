@@ -15,13 +15,15 @@ def trier_fichiers(source, destination, afficher_contenu, tri_par_extension, ren
     """
     Script pour trier les fichiers d'un dossier source vers un dossier destination.
 
-    PRE : - \n
-    POST : Va transporter les fichiers d'une source à une destination en fonction des autres paramètres renseignés\n
+    PRE : -
+
+    POST : Va transporter les fichiers d'une source à une destination en fonction des autres paramètres renseignés
+
     RAISES : FileNotFoundError si le fichier source n'existe pas
     """
 
     if not os.path.exists(source):
-        raise click.ClickException(f"Le fichier source : {source} ,n'existe pas")
+        raise click.ClickException(f"Le dossier source : {source} ,n'existe pas")
 
     if afficher_contenu:
         click.echo(f"Contenu du dossier source ({source}):")
@@ -30,7 +32,7 @@ def trier_fichiers(source, destination, afficher_contenu, tri_par_extension, ren
     elif tri_par_extension:
         trier_par_extension(source, destination)
     elif renommer_fichiers:
-        renommer_avec_prefixe_numerique(source)
+        renommer_avec_numéro_Croiss(source)
     elif supprimer_fichiers:
         supprimer_fichiers_source(source)
     elif tri_regroupement:
@@ -40,18 +42,45 @@ def trier_fichiers(source, destination, afficher_contenu, tri_par_extension, ren
 
 
 def trier_par_extension(source, destination):
-    for fichier in os.listdir(source):  # Va passer sur chaque fichier1
-        chemin_source = os.path.join(source, fichier)  # Chemin absolu du fichier1 source
-        if os.path.isfile(chemin_source):   # Vérifie si c'est un fichier1
-            nom_fichier, extension = os.path.splitext(fichier)  # Divise le nom et l'extension du fichier1 source
-            if extension != "":  # Si pas d'extension alors pas de tri effectué et reste dans le fichier1 source
-                dossier_destination = os.path.join(destination, extension[1:])  # Va creer le repértoire de destination si il n'existe pas et dans un fichier1 au nom de l'extension ([1:] pour pas prendre le .)
-                os.makedirs(dossier_destination, exist_ok=True)  # Permet de ne pas écraser si un fichier1 du même nom existe déja dans le répertoire distanation si la valuer du exist_ok est false alors voici l'erreur qui s'affiche en cas de doublon : FileExistsError: [WinError 183] Impossible de créer un fichier1 déjà existant: 'fichier2\\jpg'
-                shutil.move(os.path.join(source, fichier), os.path.join(dossier_destination, fichier))
+    """
+    Fonction pour trier des fichiers dans des dossiers portant le nom de leurs extensions
+
+    PRE : -
+    POST : Va transporter les fichiers du dossier source dans des dossiers portant le nom des extensions des fichiers
+    source se trouvant dans le dossier destination et va demander si l'utilisateur souhaite écraser les fichiers déjà
+    existant dans le fichier destination et va créer le fichier destination s'il n'existe pas.
+    RAISES : FileNotFoundError si le fichier source n'existe pas
+    """
+    for fichier in os.listdir(source):
+        chemin_source = os.path.join(source, fichier)
+        if os.path.isfile(chemin_source):
+            nom_fichier, extension = os.path.splitext(fichier)
+            if extension != "":
+                dossier_destination = os.path.join(destination, extension[1:])
+                os.makedirs(dossier_destination, exist_ok=True)
+
+                chemin_destination = os.path.join(dossier_destination, fichier)
+
+                if os.path.exists(chemin_destination):
+                    confirmer = click.confirm(
+                        f"Le fichier '{fichier}' existe déjà dans le dossier destination. Voulez-vous l'écraser?")
+                    if not confirmer:
+                        click.echo(f"Le fichier '{fichier}' n'a pas été trié.")
+                        continue
+
+                shutil.move(chemin_source, chemin_destination)
     click.echo("Fichiers triés par extension.")
 
 
-def renommer_avec_prefixe_numerique(source):
+def renommer_avec_numéro_Croiss(source):
+    """
+    Fonction qui va renommer les fichiers se trouvant dans le dossier source en y ajoutant un chiffre devant dans
+    l'ordre croissant
+
+    PRE : -
+    POST : Va modifier le nom des fichiers se trouvant dans le dossier source en y ajoutant un numéro
+    RAISES : FileNotFoundError si le fichier source n'existe pas
+    """
 
     i = 1
     for fichier in os.listdir(source):
@@ -63,6 +92,13 @@ def renommer_avec_prefixe_numerique(source):
 
 
 def supprimer_fichiers_source(source):
+    """
+    Fonction qui va supprimer tous les fichiers se trouvant dans le dossier source
+
+    PRE : -
+    POST : Va supprimer les fichiers se trouvant dans le dossier source
+    RAISES : FileNotFoundError si le fichier source n'existe pas
+    """
     for fichier in os.listdir(source):
         chemin_fichier = os.path.join(source, fichier)
         if os.path.isfile(chemin_fichier):
@@ -70,7 +106,15 @@ def supprimer_fichiers_source(source):
     click.echo("Fichiers supprimés du dossier source.")
 
 
-def trier_regroupement(source,destination):
+def trier_regroupement(source, destination):
+    """
+    Fonction qui va regrouper les fichiers sources dans des dossiers dans le dossier destination
+
+    PRE : -
+    POST : Va déplacer les fichiers du dossier sources dans leurs dossiers respectif en fonction dans leurs extensions
+    se trouvant dans le dossier destination et va créer le fichier destination s'il n'existe pas
+    RAISES : FileNotFoundError si le fichier source n'existe pas
+    """
     if not os.path.exists(destination):
         os.makedirs(destination)
 
@@ -78,21 +122,16 @@ def trier_regroupement(source,destination):
         chemin_fichier = os.path.join(source, fichier)
 
         if os.path.isfile(chemin_fichier):
-            # Obtenir l'extension du fichier1
             _, extension = os.path.splitext(fichier)
             extension = extension.lower()
-
-            # Dossiers de destination pour différents types de fichiers
             dossier_images = os.path.join(destination, 'Images')
             dossier_documents = os.path.join(destination, 'Documents')
             dossier_autres = os.path.join(destination, 'Autres')
 
-            # Créer les dossiers de destination s'ils n'existent pas
             for d in [dossier_images, dossier_documents, dossier_autres]:
                 if not os.path.exists(d):
                     os.makedirs(d)
 
-            # Déplacer les fichiers vers les dossiers correspondants
             if extension in ['.jpg', '.png', '.gif']:
                 shutil.move(chemin_fichier, os.path.join(dossier_images, fichier))
             elif extension in ['.txt', '.pdf', '.doc']:
@@ -105,3 +144,4 @@ def trier_regroupement(source,destination):
 
 if __name__ == '__main__':
     trier_fichiers()
+

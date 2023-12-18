@@ -2,15 +2,7 @@ import os
 import shutil
 
 
-def trier_fichiers(source, destination):
-    """
-    Script pour trier les fichiers d'un dossier source vers un dossier destination.
-
-    PRE : - \n
-    POST : Va transporter les fichiers d'une source à une destination en fonction des autres paramètres renseignés\n
-    RAISES : FileNotFoundError si le fichier source n'existe pas
-    """
-
+def trier_fichiers(source, destination, afficher_contenu, tri_regroupement):
     if not os.path.exists(source):
         raise click.ClickException("Le fichier1 source n'existe pas")
 
